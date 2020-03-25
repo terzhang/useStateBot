@@ -1,6 +1,6 @@
 # usestatebot
 
-> A finite state machine React hook 
+> A finite state machine React hook
 
 [![NPM](https://img.shields.io/npm/v/usestatebot.svg)](https://www.npmjs.com/package/usestatebot) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 
@@ -10,25 +10,39 @@
 npm install --save usestatebot
 ```
 
+or
+
+```bash
+yarn add usestatebot
+```
+
 ## Usage
 
 ```jsx
-import React, { Component } from 'react'
+import React from 'react';
 
-import { useMyHook } from 'usestatebot'
+import useStateBot from 'usestatebot';
 
-const Example = () => {
-  const example = useMyHook()
+const App = () => {
+  const stateBot = useStateBot({
+    initialState: 'idle',
+    idle: { to: 'loading' },
+    loading: { to: 'ready' },
+    ready: {
+      onEnter() {
+        return console.log('I am ready');
+      },
+    },
+  });
   return (
-    <div>{example}</div>
-  )
-}
+    <div>
+      {stateBot.getState()}
+      <button onClick={() => stateBot.next()}>Next State</button>
+    </div>
+  );
+};
 ```
 
 ## License
 
 MIT © [terzhang](https://github.com/terzhang)
-
----
-
-This hook is created using [create-react-hook](https://github.com/hermanya/create-react-hook).
