@@ -1,61 +1,56 @@
-import useStateBot, { ConfigException, StateException } from './';
+import useStateBot from './';
 import { renderHook, act } from '@testing-library/react-hooks';
-import { ActionException } from './customErrors';
-
-// mock timer using jest
-jest.useFakeTimers();
 
 describe('useStateBot throw Errors on improper configurations', () => {
+  console.error = jest.fn(); // mock out the console error
   it('throws ConfigException if no initialState', () => {
     try {
-      renderHook(
+      const { result } = renderHook(() =>
         useStateBot({
-          idle: {
-            onEnter: () => console.log('bot is now idle'),
-          },
+          idle: {},
         })
       );
     } catch (error) {
-      expect(error).toBeInstanceOf(ConfigException);
-      expect(error.name).toBe('initialState');
+      expect(error.name).toBe('ConfigException');
+      expect(error.cause).toBe('initialState');
     }
   });
 
   it('throws StateException on invalid initialState', () => {
     const badState = 'sleep';
     try {
-      renderHook(
+      renderHook(() =>
         useStateBot({
           initialState: badState,
-          idle: {
-            onEnter: () => console.log('bot is now idle'),
-          },
+          idle: {},
         })
       );
     } catch (error) {
-      expect(error).toBeInstanceOf(StateException);
-      expect(error.name).toBe(badState);
+      expect(error.name).toBe('StateException');
+      expect(error.cause).toBe(badState);
     }
   });
 
   it('throws StateException if a state property is not an object', () => {
     try {
-      renderHook(
+      renderHook(() =>
         useStateBot({
           initialState: 'idle',
           idle: 123,
         })
       );
     } catch (error) {
-      expect(error).toBeInstanceOf(StateException);
-      expect(error.name).toBe('idle');
+      expect(error.name).toBe('StateException');
+      expect(error.cause).toBe('idle');
     }
   });
 });
 
 describe('stateBot functions', () => {
   it('loads correct initial state', () => {
-    const stateBot = renderHook(
+    const {
+      result: { current: stateBot },
+    } = renderHook(() =>
       useStateBot({
         initialState: 'idle',
         idle: {
@@ -67,7 +62,10 @@ describe('stateBot functions', () => {
   });
 
   it('goes through a linear state path from inital state to last', () => {
-    const { next, to, getState, reset } = renderHook(
+    const {
+      result,
+      // waitForNextUpdate,
+    } = renderHook(() =>
       useStateBot({
         initialState: 'idle',
         idle: { to: 'ready' },
@@ -75,40 +73,52 @@ describe('stateBot functions', () => {
         destroyed: {},
       })
     );
+    expect(result.current.getState()).toBe('idle');
     // next state after initial state: idle should be 'ready'
-    act(next());
-    expect(getState()).toBe('ready');
+    act(() => result.current.next());
+    // await waitForNextUpdate();
+    expect(result.current.getState()).toBe('ready');
 
     // next state after 'ready' should be 'destroyed'
-    act(next());
-    expect(getState()).toBe('destroyed');
+    act(() => result.current.next());
+    expect(result.current.getState()).toBe('destroyed');
 
     // calling next() after reaching last state should do nothing
-    expect(() => act(next())).not.toThrow();
+    expect(() => act(() => result.current.next())).not.toThrow();
 
     // should also have no change in state; still 'destroyed'
-    expect(getState()).toBe('destroyed');
+    expect(result.current.getState()).toBe('destroyed');
 
-    act(reset());
+    act(() => result.current.reset());
     // resetting should put state back to initial state
-    expect(getState()).toBe('idle');
+    expect(result.current.getState()).toBe('idle');
 
-    act(to('ready'));
+    act(() => result.current.to('ready'));
     // going to 'ready' from 'idle' should land on state 'ready'
-    expect(getState()).toBe('ready');
+    expect(result.current.getState()).toBe('ready');
 
-    act(to('destroyed'));
+    act(() => result.current.to('destroyed'));
     // going to 'destroy' from 'ready' should land on state 'destroyed'
-    expect(getState()).toBe('destroyed');
+    expect(result.current.getState()).toBe('destroyed');
 
     // calling to(state) after reaching last state should do nothing
-    expect(() => act(to('idle'))).not.toThrow();
+    expect(() => act(() => result.current.to('idle'))).not.toThrow();
 
-    // calling to() without an argument should throw ActionException
-    expect(() => act(to())).toThrow(ActionException);
+    try {
+      // calling to() without an argument should throw ActionException
+      act(() => result.current.to());
+    } catch (error) {
+      expect(error.name).toBe('ActionException');
+      expect(error.cause).toBe('to');
+    }
 
-    // calling to() with empty string should throw ActionException
-    expect(() => act(to(''))).toThrow(ActionException);
+    try {
+      // calling to() with empty string should throw ActionException
+      act(() => result.current.to(''));
+    } catch (error) {
+      expect(error.name).toBe('ActionException');
+      expect(error.cause).toBe('to');
+    }
   });
 
   it('side effect, onEnter, onEnter, and globals called only when transitioning', () => {
@@ -125,7 +135,7 @@ describe('stateBot functions', () => {
     const globalExit = jest.fn();
     const globalAction = jest.fn();
 
-    const { next, to, reset } = renderHook(
+    const { result } = renderHook(() =>
       useStateBot({
         initialState: 'idle',
         idle: { to: 'ready', onExit: onExitIdle, action: idleAction },
@@ -160,7 +170,7 @@ describe('stateBot functions', () => {
       expect(onEnterDestroyed.mock.calls.length).toBe(1);
     }
 
-    act(next());
+    act(() => result.current.next());
     // all transition functions from idle to ready are called once
     verifyIdleToReady();
     // all global transition functions from idle to destroyed are called twice
@@ -168,7 +178,7 @@ describe('stateBot functions', () => {
     expect(globalExit.mock.calls.length).toBe(1);
     expect(globalAction.mock.calls.length).toBe(1);
 
-    act(to('destroyed'));
+    act(() => result.current.to('destroyed'));
     // all transition functions from idle to destroyed are called once
     verifyReadyToDestroyed();
     // all global transition functions from idle to destroyed are called twice
@@ -176,7 +186,7 @@ describe('stateBot functions', () => {
     expect(globalExit.mock.calls.length).toBe(2);
     expect(globalAction.mock.calls.length).toBe(2);
 
-    act(reset());
+    act(() => result.current.reset());
     // all transition functions are still called exactly once
     verifyIdleToReady();
     verifyReadyToDestroyed();
