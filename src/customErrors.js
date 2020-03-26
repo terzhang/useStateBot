@@ -10,7 +10,11 @@ export function ConfigException(configNames, message) {
   } else {
     this.message = message;
   }
-  const Err = new CustomErrorCreator(this.message, 'ConfigException');
+  const Err = new CustomErrorCreator(
+    'ConfigException',
+    configNames,
+    this.message
+  );
   // Err.configName = configNames;
   // Err.name = 'ConfigException';
   return Err;
@@ -24,7 +28,11 @@ export function StateException(stateNames, message) {
   } else {
     this.message = message;
   }
-  const Err = new CustomErrorCreator(this.message, 'StateException');
+  const Err = new CustomErrorCreator(
+    'StateException',
+    stateNames,
+    this.message
+  );
   // Err.stateNames = stateNames;
   // Err.name = 'StateException';
   return Err;
@@ -37,7 +45,11 @@ export function ActionException(actionName, message) {
   } else {
     this.message = `Invalid Action: ${actionName} \n${message}`;
   }
-  const Err = new CustomErrorCreator(this.message, 'ActionException');
+  const Err = new CustomErrorCreator(
+    'ActionException',
+    actionName,
+    this.message
+  );
   // Err.actionName = actionName;
   // Err.name = 'ActionException';
   return Err;

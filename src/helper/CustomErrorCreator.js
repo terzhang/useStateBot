@@ -1,30 +1,15 @@
-export default new (function () {
-  // Taken from MDN
-  function CustomError(message, name) {
-    var instance = new Error(message);
-    instance.name = name ? name : 'CustomError';
-    Object.setPrototypeOf(instance, Object.getPrototypeOf(this));
+export default class CustomError extends Error {
+  constructor(name, cause, message, ...params) {
+    // Pass remaining arguments (including vendor specific ones) to parent constructor
+    super(message, ...params);
+
+    // Maintains proper stack trace for where our error was thrown (only available on V8)
     if (Error.captureStackTrace) {
-      Error.captureStackTrace(instance, CustomError);
+      Error.captureStackTrace(this, CustomError);
     }
-    return instance;
+
+    this.name = name ? name : 'CustomError';
+    // Custom debugging information
+    this.cause = cause;
   }
-
-  CustomError.prototype = Object.create(Error.prototype, {
-    constructor: {
-      value: Error,
-      enumerable: false,
-      writable: true,
-      configurable: true,
-    },
-  });
-
-  if (Object.setPrototypeOf) {
-    Object.setPrototypeOf(CustomError, Error);
-  } else {
-    // eslint-disable-next-line no-proto
-    CustomError.__proto__ = Error;
-  }
-
-  return CustomError;
-})();
+}
