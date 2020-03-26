@@ -27,7 +27,7 @@ export default function useStateBot(initialOption) {
     if (!initialOption.initialState) {
       throw new ConfigException('initialState');
       // the specified initialState is not configured
-    } else if (!initialOption[initialOption.initialState]) {
+    } else if (!initialOption.hasOwnProperty(initialOption.initialState)) {
       const stateName = initialOption.initialState;
       throw new StateException(
         stateName,
@@ -126,12 +126,12 @@ export default function useStateBot(initialOption) {
     },
     getPath(givenState) {
       // check if given state exist
-      if (!givenState || !options.current.hasOwnProperty()) {
+      if (!givenState) {
         throw new ActionException(
           'getPath',
           `Missing stateName as argument for getPath`
         );
-      } else if (!options.current.hasOwnProperty()) {
+      } else if (givenState && !options.current.hasOwnProperty(givenState)) {
         throw new ActionException('getPath', `The given stateName is invalid`);
       }
       // check it has a path property
@@ -185,7 +185,9 @@ export default function useStateBot(initialOption) {
       options.current.globalExit && options.current.globalExit();
       onExit && onExit();
       options.current.globalEnter && options.current.globalEnter();
-      targetStateDef.onEnter && targetStateDef.onEnter();
+      if (targetStateDef) {
+        targetStateDef.onEnter && targetStateDef.onEnter();
+      }
 
       // switch bot to to state and return new state
       setState(targetState);
@@ -197,6 +199,12 @@ export default function useStateBot(initialOption) {
       // it holds where to, onExit and transition actions
       const { to, onExit, action } = currentStateDef;
 
+      // it's possible to have no path to go (end state)
+      if (!to) {
+        return;
+      }
+
+      // otherwise, it cannot be an array of more than 1 element
       let targetState;
       if (Array.isArray(to)) {
         if (to.length >= 2 && to.length !== 0) {
