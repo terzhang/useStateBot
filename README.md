@@ -1,8 +1,8 @@
-# usestatebot
+# useStateBot
 
 > A finite state machine React hook
 
-[![NPM](https://img.shields.io/npm/v/usestatebot.svg)](https://www.npmjs.com/package/usestatebot) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
+[![NPM](https://img.shields.io/npm/v/usestatebot.svg)](https://www.npmjs.com/package/usestatebot) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com) [![Travis-CI](https://travis-ci.com/terzhang/useStateBot.svg?branch=master)](https://travis-ci.com/github/terzhang/useStateBot)
 
 ## Install
 
@@ -34,6 +34,7 @@ const App = () => {
       },
     },
   });
+
   return (
     <div>
       {stateBot.getState()}
