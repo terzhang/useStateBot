@@ -5,7 +5,7 @@ describe('useStateBot throw Errors on improper configurations', () => {
   console.error = jest.fn(); // mock out the console error
   it('throws ConfigException if no initialState', () => {
     try {
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useStateBot({
           idle: {},
         })
@@ -44,23 +44,29 @@ describe('useStateBot throw Errors on improper configurations', () => {
       expect(error.cause).toBe('idle');
     }
   });
+
+  it("throws ActionException when attempting to reach a target state that shouldn't be reach from current state", () => {
+    const { result } = renderHook(() =>
+      useStateBot({
+        initialState: 'destroyed',
+        idle: { to: 'ready' },
+        ready: { to: 'destroyed' },
+        destroyed: { to: 'idle' },
+      })
+    );
+    // loads the correct initial state
+    expect(result.current.getState()).toBe('destroyed');
+    try {
+      // 'destroyed' only points to 'idle', going to 'ready' should do nothing
+      act(() => result.current.to('ready'));
+    } catch (error) {
+      expect(error.name).toBe('ActionException');
+      expect(error.cause).toBe('to');
+    }
+  });
 });
 
 describe('stateBot functions', () => {
-  it('loads correct initial state', () => {
-    const {
-      result: { current: stateBot },
-    } = renderHook(() =>
-      useStateBot({
-        initialState: 'idle',
-        idle: {
-          onEnter: () => console.log('bot is now idle'),
-        },
-      })
-    );
-    expect(stateBot.getState()).toBe('idle');
-  });
-
   it('goes through a linear state path from inital state to last', () => {
     const {
       result,
@@ -73,10 +79,11 @@ describe('stateBot functions', () => {
         destroyed: {},
       })
     );
+    // loads the correct initial state
     expect(result.current.getState()).toBe('idle');
-    // next state after initial state: idle should be 'ready'
+
     act(() => result.current.next());
-    // await waitForNextUpdate();
+    // next state after initial state: idle should be 'ready'
     expect(result.current.getState()).toBe('ready');
 
     // next state after 'ready' should be 'destroyed'
@@ -103,6 +110,7 @@ describe('stateBot functions', () => {
 
     // calling to(state) after reaching last state should do nothing
     expect(() => act(() => result.current.to('idle'))).not.toThrow();
+    expect(result.current.getState()).toBe('destroyed');
 
     try {
       // calling to() without an argument should throw ActionException

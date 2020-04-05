@@ -42,7 +42,7 @@ export default function useStateBot(initialOption) {
     let keys = Object.keys(initialOption);
     // strip out the global events
     const states = keys.filter(
-      prop =>
+      (prop) =>
         !['initialState', 'globalEnter', 'globalExit', 'globalAction'].includes(
           prop
         )
@@ -101,7 +101,7 @@ export default function useStateBot(initialOption) {
     // bad states is states stripped of good states
     // make sure to not include initial state since it's allowed to be inaccessible
     const badStates = states.filter(
-      state =>
+      (state) =>
         !goodStates.includes(state) && state !== options.current.initialState
     );
 
@@ -168,6 +168,13 @@ export default function useStateBot(initialOption) {
         return;
         // check if targetState can be reached from current state
       } else if (Array.isArray(to) && !to.includes(targetState)) {
+        // can't reach if target state is not one of the entry in the to array
+        throw new ActionException(
+          'to',
+          `${targetState} is unreachable from ${state}`
+        );
+      } else if (to !== targetState) {
+        // can't reach if target state is not configured to be accessible from current state
         throw new ActionException(
           'to',
           `${targetState} is unreachable from ${state}`
