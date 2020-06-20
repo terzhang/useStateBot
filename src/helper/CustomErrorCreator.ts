@@ -1,14 +1,15 @@
 export default class CustomError extends Error {
-  constructor(name, cause, message, ...params) {
+  cause: string | string[];
+  constructor(cause: string | string[], message: string) {
     // Pass remaining arguments (including vendor specific ones) to parent constructor
-    super(message, ...params);
+    super(message);
 
     // Maintains proper stack trace for where our error was thrown (only available on V8)
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, CustomError);
     }
-
-    this.name = name ? name : 'CustomError';
+    // the name property is the name of whoever calls this CustomError Constructor
+    this.name = this.constructor.name;
     // Custom debugging information
     this.cause = cause;
   }

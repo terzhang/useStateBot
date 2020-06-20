@@ -1,4 +1,4 @@
-import useStateBot from './';
+import useStateBot from '..';
 import { renderHook, act } from '@testing-library/react-hooks';
 
 describe('useStateBot throw Errors on improper configurations', () => {
@@ -6,6 +6,7 @@ describe('useStateBot throw Errors on improper configurations', () => {
   it('throws ConfigException if no initialState', () => {
     try {
       renderHook(() =>
+        // @ts-expect-error
         useStateBot({
           idle: {},
         })
@@ -58,7 +59,9 @@ describe('useStateBot throw Errors on improper configurations', () => {
     expect(result.current.getState()).toBe('destroyed');
     try {
       // 'destroyed' only points to 'idle', going to 'ready' should do nothing
-      act(() => result.current.to('ready'));
+      act(() => {
+        result.current.to('ready');
+      });
     } catch (error) {
       expect(error.name).toBe('ActionException');
       expect(error.cause).toBe('to');
@@ -82,16 +85,24 @@ describe('stateBot functions', () => {
     // loads the correct initial state
     expect(result.current.getState()).toBe('idle');
 
-    act(() => result.current.next());
+    act(() => {
+      result.current.next();
+    });
     // next state after initial state: idle should be 'ready'
     expect(result.current.getState()).toBe('ready');
 
     // next state after 'ready' should be 'destroyed'
-    act(() => result.current.next());
+    act(() => {
+      result.current.next();
+    });
     expect(result.current.getState()).toBe('destroyed');
 
     // calling next() after reaching last state should do nothing
-    expect(() => act(() => result.current.next())).not.toThrow();
+    expect(() =>
+      act(() => {
+        result.current.next();
+      })
+    ).not.toThrow();
 
     // should also have no change in state; still 'destroyed'
     expect(result.current.getState()).toBe('destroyed');
@@ -100,21 +111,32 @@ describe('stateBot functions', () => {
     // resetting should put state back to initial state
     expect(result.current.getState()).toBe('idle');
 
-    act(() => result.current.to('ready'));
+    act(() => {
+      result.current.to('ready');
+    });
     // going to 'ready' from 'idle' should land on state 'ready'
     expect(result.current.getState()).toBe('ready');
 
-    act(() => result.current.to('destroyed'));
+    act(() => {
+      result.current.to('destroyed');
+    });
     // going to 'destroy' from 'ready' should land on state 'destroyed'
     expect(result.current.getState()).toBe('destroyed');
 
     // calling to(state) after reaching last state should do nothing
-    expect(() => act(() => result.current.to('idle'))).not.toThrow();
+    expect(() =>
+      act(() => {
+        result.current.to('idle');
+      })
+    ).not.toThrow();
     expect(result.current.getState()).toBe('destroyed');
 
     try {
       // calling to() without an argument should throw ActionException
-      act(() => result.current.to());
+      act(() => {
+        // @ts-expect-error
+        result.current.to();
+      });
     } catch (error) {
       expect(error.name).toBe('ActionException');
       expect(error.cause).toBe('to');
@@ -122,7 +144,9 @@ describe('stateBot functions', () => {
 
     try {
       // calling to() with empty string should throw ActionException
-      act(() => result.current.to(''));
+      act(() => {
+        result.current.to('');
+      });
     } catch (error) {
       expect(error.name).toBe('ActionException');
       expect(error.cause).toBe('to');
@@ -178,7 +202,9 @@ describe('stateBot functions', () => {
       expect(onEnterDestroyed.mock.calls.length).toBe(1);
     }
 
-    act(() => result.current.next());
+    act(() => {
+      result.current.next();
+    });
     // all transition functions from idle to ready are called once
     verifyIdleToReady();
     // all global transition functions from idle to destroyed are called twice
@@ -186,7 +212,9 @@ describe('stateBot functions', () => {
     expect(globalExit.mock.calls.length).toBe(1);
     expect(globalAction.mock.calls.length).toBe(1);
 
-    act(() => result.current.to('destroyed'));
+    act(() => {
+      result.current.to('destroyed');
+    });
     // all transition functions from idle to destroyed are called once
     verifyReadyToDestroyed();
     // all global transition functions from idle to destroyed are called twice
