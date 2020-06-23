@@ -1,49 +1,45 @@
 import useStateBot from '..';
 import { renderHook, act } from '@testing-library/react-hooks';
+import {
+  ConfigException,
+  StateException,
+  ActionException,
+} from '../customErrors';
+import expectHookError from './util/expectHookError';
 
 describe('useStateBot throw Errors on improper configurations', () => {
-  console.error = jest.fn(); // mock out the console error
   it('throws ConfigException if no initialState', () => {
-    try {
-      renderHook(() =>
-        // @ts-expect-error
-        useStateBot({
-          idle: {},
-        })
-      );
-    } catch (error) {
-      expect(error.name).toBe('ConfigException');
-      expect(error.cause).toBe('initialState');
-    }
+    const { error }: any = expectHookError(() => {
+      // @ts-expect-error
+      useStateBot({
+        idle: {},
+      });
+    });
+    expect(error).toBeInstanceOf(ConfigException);
+    expect(error.cause).toBe('initialState');
   });
 
   it('throws StateException on invalid initialState', () => {
     const badState = 'sleep';
-    try {
-      renderHook(() =>
-        useStateBot({
-          initialState: badState,
-          idle: {},
-        })
-      );
-    } catch (error) {
-      expect(error.name).toBe('StateException');
-      expect(error.cause).toBe(badState);
-    }
+    const { error }: any = expectHookError(() => {
+      useStateBot({
+        initialState: badState,
+        idle: {},
+      });
+    });
+    expect(error).toBeInstanceOf(StateException);
+    expect(error.cause).toBe(badState);
   });
 
   it('throws StateException if a state property is not an object', () => {
-    try {
-      renderHook(() =>
-        useStateBot({
-          initialState: 'idle',
-          idle: 123,
-        })
-      );
-    } catch (error) {
-      expect(error.name).toBe('StateException');
-      expect(error.cause).toBe('idle');
-    }
+    const { error }: any = expectHookError(() =>
+      useStateBot({
+        initialState: 'idle',
+        idle: 123,
+      })
+    );
+    expect(error).toBeInstanceOf(StateException);
+    expect(error.cause).toBe('idle');
   });
 
   it("throws ActionException when attempting to reach a target state that shouldn't be reach from current state", () => {
@@ -63,7 +59,7 @@ describe('useStateBot throw Errors on improper configurations', () => {
         result.current.to('ready');
       });
     } catch (error) {
-      expect(error.name).toBe('ActionException');
+      expect(error).toBeInstanceOf(ActionException);
       expect(error.cause).toBe('to');
     }
   });
@@ -138,7 +134,7 @@ describe('stateBot functions', () => {
         result.current.to();
       });
     } catch (error) {
-      expect(error.name).toBe('ActionException');
+      expect(error).toBeInstanceOf(ActionException);
       expect(error.cause).toBe('to');
     }
 
@@ -148,7 +144,7 @@ describe('stateBot functions', () => {
         result.current.to('');
       });
     } catch (error) {
-      expect(error.name).toBe('ActionException');
+      expect(error).toBeInstanceOf(ActionException);
       expect(error.cause).toBe('to');
     }
   });
