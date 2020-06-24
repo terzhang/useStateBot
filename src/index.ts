@@ -4,23 +4,40 @@ import {
   StateException,
   ActionException,
 } from './customErrors';
+import { StateBot } from './types';
 
-export default function useStateBot(initialOption) {
+interface stateConfig {
+  to?: string | string[];
+  onEnter?: undefined | (() => any);
+  onExit?: undefined | (() => any);
+  action?: undefined | (() => any);
+}
+
+interface Option {
+  initialState: string;
+  globalEnter?: undefined | (() => any);
+  globalExit?: undefined | (() => any);
+  globalAction?: undefined | (() => any);
+}
+
+// Given a generic type N, exclude all keys from N that's from initialOption
+type notOptions<N> = Exclude<keyof N, keyof Option>;
+
+// Given a generic type S, generate a State type that...
+// covers all keys in S that is:
+// not of Option type and is of stateConfig type.
+type State<S> = Record<notOptions<S>, stateConfig>;
+
+// The initial option is the Option type intersecting the State type
+type initialOption<O> = Option & State<O>;
+
+// create a function with generic type T, that takes a initialOption and...
+// create the appropriate type that covers the Option type and the States type from T
+export default function useStateBot<T extends initialOption<T>>(
+  initialOption: T
+): StateBot {
   const [state, setState] = useState(initialOption.initialState);
   const options = useRef(initialOption);
-  /* options === {
-        initialState: String,
-        globalEnter: function || null,
-        globalExit: function || null,
-        globalAction: function || null,
-        ...states<state>
-    } */
-  /* state === {
-        to: String,
-        onEnter: function || null,
-        onExit: function || null,
-        action: function || null,
-    } */
 
   const checkInitialState = useCallback(() => {
     // throw error if initialState is missing
@@ -28,10 +45,9 @@ export default function useStateBot(initialOption) {
       throw new ConfigException('initialState');
       // the specified initialState is not configured
     } else if (!initialOption.hasOwnProperty(initialOption.initialState)) {
-      const stateName = initialOption.initialState;
       throw new StateException(
-        stateName,
-        `${stateName} is specified as initialState, but is not configured`
+        initialOption.initialState,
+        `${initialOption.initialState} is specified as initialState, but is not configured`
       );
     }
   }, []);
@@ -47,9 +63,9 @@ export default function useStateBot(initialOption) {
           prop
         )
     );
-    const goodStates = [];
+    const goodStates = [] as string[];
 
-    const checkPath = (path, stateName) => {
+    const checkPath = (path: string, stateName: string) => {
       if (!states.includes(path)) {
         // points to a valid state?
         throw new StateException(
@@ -80,8 +96,8 @@ export default function useStateBot(initialOption) {
 
       const path = stateObj.to;
       // if it leads to another state, check if its "to" property...
-      if (path && (typeof path === 'string' || path instanceof String)) {
-        checkPath(path, stateName);
+      if (path && (typeof path === 'string' || <any>path instanceof String)) {
+        checkPath(path as string, stateName);
         // if it's an array
       } else if (path && Array.isArray(path)) {
         // check each element inside path array
@@ -122,9 +138,9 @@ export default function useStateBot(initialOption) {
 
   return {
     isEndState() {
-      return !options.current[state].hasOwnProperty('to');
+      return !options.current[state]!.hasOwnProperty('to');
     },
-    getPath(givenState) {
+    getPath(givenState: string) {
       // check if given state exist
       if (!givenState) {
         throw new ActionException(
@@ -159,9 +175,8 @@ export default function useStateBot(initialOption) {
       }
 
       // get current state obj
-      const currentStateDef = options.current[state];
       // it holds where to, onExit and transition actions
-      const { to, onExit, action } = currentStateDef;
+      const { to, onExit, action } = options.current[state];
 
       // return not going anywhere (or if it's final state)
       if (!to) {
@@ -173,8 +188,8 @@ export default function useStateBot(initialOption) {
           'to',
           `${targetState} is unreachable from ${state}`
         );
-      } else if (to !== targetState) {
-        // can't reach if target state is not configured to be accessible from current state
+      } else if (typeof to === 'string' && to !== targetState) {
+        // can't reach if reachable state is a string and not target state
         throw new ActionException(
           'to',
           `${targetState} is unreachable from ${state}`
@@ -246,19 +261,19 @@ export default function useStateBot(initialOption) {
       const { to } = currentStateDef;
       return Array.isArray(to) && to.length > 1;
     },
-    setGlobalEnter(onEnter) {
+    setGlobalEnter(onEnter: () => any): void {
       options.current.globalEnter = onEnter();
     },
-    setGlobalExit(onExit) {
+    setGlobalExit(onExit: () => any): void {
       options.current.globalExit = onExit();
     },
-    setGlobalAction(action) {
+    setGlobalAction(action: () => any): void {
       options.current.globalAction = action();
     },
     clearAllGlobals() {
-      options.current.globalEnter = null;
-      options.current.globalExit = null;
-      options.current.globalAction = null;
+      options.current.globalEnter = undefined;
+      options.current.globalExit = undefined;
+      options.current.globalAction = undefined;
     },
   };
 }
