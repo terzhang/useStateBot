@@ -87,7 +87,11 @@ export default function useStateBot<T extends initialOption<T>>(
       let stateObj = initialOption[stateName];
 
       // verify state is a valid object
-      if (!stateObj) {
+      if (
+        !Boolean(stateObj) ||
+        !(stateObj instanceof Object) ||
+        stateObj.constructor !== Object
+      ) {
         throw new StateException(
           stateName,
           `Invalid state property. "${stateName}" must be a valid object`
