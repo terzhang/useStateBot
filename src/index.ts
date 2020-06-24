@@ -188,8 +188,8 @@ export default function useStateBot<T extends initialOption<T>>(
           'to',
           `${targetState} is unreachable from ${state}`
         );
-      } else if (to !== targetState) {
-        // can't reach if target state is not configured to be accessible from current state
+      } else if (typeof to === 'string' && to !== targetState) {
+        // can't reach if reachable state is a string and not target state
         throw new ActionException(
           'to',
           `${targetState} is unreachable from ${state}`
