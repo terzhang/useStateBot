@@ -1,0 +1,22 @@
+{
+  "files": {
+    "main.css": "/usestatebot/static/css/main.ad9d5147.chunk.css",
+    "main.js": "/usestatebot/static/js/main.488a622f.chunk.js",
+    "main.js.map": "/usestatebot/static/js/main.488a622f.chunk.js.map",
+    "runtime-main.js": "/usestatebot/static/js/runtime-main.81597ea5.js",
+    "runtime-main.js.map": "/usestatebot/static/js/runtime-main.81597ea5.js.map",
+    "static/js/2.185729dc.chunk.js": "/usestatebot/static/js/2.185729dc.chunk.js",
+    "static/js/2.185729dc.chunk.js.map": "/usestatebot/static/js/2.185729dc.chunk.js.map",
+    "index.html": "/usestatebot/index.html",
+    "precache-manifest.fbb5622c0eea5cd8b753fd70e9a56bde.js": "/usestatebot/precache-manifest.fbb5622c0eea5cd8b753fd70e9a56bde.js",
+    "service-worker.js": "/usestatebot/service-worker.js",
+    "static/css/main.ad9d5147.chunk.css.map": "/usestatebot/static/css/main.ad9d5147.chunk.css.map",
+    "static/js/2.185729dc.chunk.js.LICENSE.txt": "/usestatebot/static/js/2.185729dc.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.81597ea5.js",
+    "static/js/2.185729dc.chunk.js",
+    "static/css/main.ad9d5147.chunk.css",
+    "static/js/main.488a622f.chunk.js"
+  ]
+}
