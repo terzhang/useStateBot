@@ -50,7 +50,6 @@
     "typescript": "^3.2.4"
   },
   "files": [
-    "./README.md",
-    "./dist"
+    "dist/!(__test__)"
   ]
 }
